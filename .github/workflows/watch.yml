@@ -1,0 +1,41 @@
+name: Corolla Excite watcher
+
+on:
+  schedule:
+    # Every hour at minute 17 (UTC). See README for how to change this.
+    - cron: "17 * * * *"
+  workflow_dispatch: # adds the "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write # needed to commit seen_cars.json back to the repo
+
+concurrency:
+  group: watcher # never run two checks at the same time
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v5
+
+      - name: Check for new cars
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python3 watcher.py
+
+      - name: Save seen_cars.json
+        if: always() # save progress even if a message failed to send
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add seen_cars.json
+          if git diff --cached --quiet; then
+            echo "No changes to save."
+          else
+            git commit -m "Update seen cars"
+            git push
+          fi

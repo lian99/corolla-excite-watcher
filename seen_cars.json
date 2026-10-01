@@ -1,0 +1,15 @@
+{
+  "cars": {
+    "23481": {
+      "first_seen": "2026-10-01T18:00:34+00:00",
+      "title": "קורולה אקסייט",
+      "price": 109000,
+      "year": 2021,
+      "mileage": 126000,
+      "hand": "יד 1",
+      "dealer": "א.ס עבדלהאדי",
+      "link": "https://toyota-select.co.il/cars/toyota_as/23481/"
+    }
+  },
+  "problem": null
+}
