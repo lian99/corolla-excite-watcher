@@ -1,3 +1,4 @@
 # Local secrets - never commit
 .env
 __pycache__/
+watcher.log

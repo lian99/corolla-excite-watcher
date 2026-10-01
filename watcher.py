@@ -76,8 +76,24 @@ except AttributeError:
     pass
 
 
+LOG_FILE = None  # set by --log-file
+MAX_LOG_BYTES = 1_000_000
+
+
 def log(msg):
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
+    line = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {msg}"
+    if sys.stdout:  # None when started windowless (pythonw)
+        print(line, flush=True)
+    if LOG_FILE:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+
+
+def trim_log_file():
+    """Keep the log file from growing forever: drop the oldest half when it gets big."""
+    if LOG_FILE and LOG_FILE.exists() and LOG_FILE.stat().st_size > MAX_LOG_BYTES:
+        lines = LOG_FILE.read_text(encoding="utf-8").splitlines(keepends=True)
+        LOG_FILE.write_text("".join(lines[len(lines) // 2:]), encoding="utf-8")
 
 
 class SiteError(Exception):
@@ -487,7 +503,13 @@ def main():
     parser.add_argument("--test", action="store_true", help="send one test Telegram message and exit")
     parser.add_argument("--get-chat-id", action="store_true", help="show the chat ID of whoever messaged your bot")
     parser.add_argument("--state", type=Path, default=DEFAULT_STATE_FILE, help="path to the seen-cars JSON file")
+    parser.add_argument("--log-file", type=Path, help="also append log lines to this file")
     args = parser.parse_args()
+
+    global LOG_FILE
+    LOG_FILE = args.log_file
+    trim_log_file()
+    log("--- check started ---")
 
     load_dotenv()
 
